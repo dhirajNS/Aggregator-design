@@ -6,4 +6,5 @@ import lombok.Data;
 public class AggregateResponse {
     Orders order;
     Payment payment;
+    Delivery delivery;
 }

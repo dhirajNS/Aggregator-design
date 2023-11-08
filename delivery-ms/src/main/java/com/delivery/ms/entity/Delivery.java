@@ -24,6 +24,6 @@ public class Delivery {
 	private String status;
 
 	@Column
-	private long orderId;
+	private Long orderId;
 
 }

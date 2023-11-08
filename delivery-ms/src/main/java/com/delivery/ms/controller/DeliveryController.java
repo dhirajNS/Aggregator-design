@@ -1,6 +1,8 @@
 package com.delivery.ms.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 
@@ -13,6 +15,9 @@ import com.delivery.ms.entity.DeliveryRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import java.util.Optional;
 
 @Controller
 public class DeliveryController {
@@ -53,6 +58,16 @@ public class DeliveryController {
 			reverseEvent.setType("STOCK_REVERSED");
 			reverseEvent.setOrder(order);
 			kafkaTemplate.send("reversed-stock", reverseEvent);
+		}
+	}
+
+	@GetMapping("/get-delivery-info/{orderId}")
+	public ResponseEntity<?> getDeliveryDetails(Long orderId){
+		Optional<Delivery> delivery= repository.findByOrderId(orderId);
+		if(delivery.isPresent()){
+			return new ResponseEntity<>(delivery, HttpStatus.OK);
+		}else{
+			return new ResponseEntity<>("Not Found", HttpStatus.NO_CONTENT);
 		}
 	}
 }
