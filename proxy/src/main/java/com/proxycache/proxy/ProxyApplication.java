@@ -1,4 +1,4 @@
-package com.order.ms;
+package com.proxycache.proxy;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,10 +6,10 @@ import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication
 @EnableCaching
-public class OrderMsApplication {
+public class ProxyApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(OrderMsApplication.class, args);
+		SpringApplication.run(ProxyApplication.class, args);
 	}
 
 }

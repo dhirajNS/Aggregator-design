@@ -2,6 +2,7 @@ package com.order.ms.controller;
 
 import com.order.ms.entity.Orders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -24,6 +25,8 @@ public class OrderController {
 
 	@Autowired
 	private KafkaTemplate<String, OrderEvent> kafkaTemplate;
+	@Autowired
+	private KafkaTemplate<String, Long> updateKafkaTemplate;
 
 	@PostMapping("/orders")
 	public void createOrder(@RequestBody CustomerOrder customerOrder) {
@@ -49,10 +52,34 @@ public class OrderController {
 		}
 	}
 
+	@PutMapping("/orders/{orderId}")
+	@CacheEvict(value = "orderCache", key = "#orderId")
+	public void updateOrder(@PathVariable long orderId,@RequestBody CustomerOrder customerOrder) {
+		Optional<Orders> order = repository.findById(orderId);
+		if(order.isPresent()) {
+			try {
+				order.get().setAmount(customerOrder.getAmount());
+				order.get().setItem(customerOrder.getItem());
+				order.get().setQuantity(customerOrder.getQuantity());
+				order.get().setStatus("UPDATED");
+				repository.save(order.get());
+				OrderEvent event = new OrderEvent();
+				event.setOrder(customerOrder);
+				event.setType("ORDER-UPDATED");
+				updateKafkaTemplate.send("update-order", orderId);
+			} catch (Exception e) {
+				order.get().setStatus("FAILED");
+				repository.save(order.get());
+			}
+		}else{
+			System.out.println("No ");
+		}
+	}
 	@GetMapping("/orders/{orderId}")
 	public ResponseEntity getOrder(@PathVariable long orderId) {
 		try {
 			Optional<Orders> orders=repository.findById(orderId);
+			System.out.println("Order service has been called*********************"+orders);
 			if(orders.isPresent()){
 				return new ResponseEntity(orders, HttpStatus.OK);
 			}
